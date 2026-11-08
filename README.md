@@ -1,6 +1,6 @@
 # Watchdog
 
-**TODO: Add description**
+**Watch dog app build on top elixir**
 
 ## Installation
 
