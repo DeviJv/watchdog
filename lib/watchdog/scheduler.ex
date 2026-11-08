@@ -1,10 +1,12 @@
 defmodule Watchdog.Scheduler do
   use GenServer
 
+  @default_url ["https://google.com", "https://youtube.com"]
+
   def start_link(init_args \\ []) do
     # you may want to register your server with `name: __MODULE__`
     # as a third argument to `start_link`
-    #
+
     IO.puts("Starting SchedulerServer .....")
 
     GenServer.start_link(__MODULE__, init_args, name: __MODULE__)
@@ -12,15 +14,14 @@ defmodule Watchdog.Scheduler do
 
   def init(urls) do
     # Bikin tabel memori bernama :watchdog_metrics
-    # :set artinya tipe datanya unik (key-value), :public agar bisa ditulis oleh Task worker
+    # :set artinya tipe datanya unik (key-value), :public agar bisa ditulis oleh Task worker dan dia create or update
+    # jadi tidak menumpuk atau duplicate dengan url menjadi primary key nya
+    # kalo primary sudah ada dia akan update hasil nya saja ketika insert di bawah
     # :named_table agar kita bisa memanggilnya cukup dengan nama :watchdog_metrics
     :ets.new(:watchdog_metrics, [:set, :public, :named_table])
     # tambahan panggil default url
-    default_url = default_url()
-    new_urls = urls ++ default_url
-
+    new_urls = urls ++ @default_url
     Process.send_after(self(), :ping_sekarang, 1_000)
-
     {:ok, new_urls}
   end
 
@@ -42,17 +43,11 @@ defmodule Watchdog.Scheduler do
     Task.Supervisor.async_stream(
       Watchdog.TaskSupervisor,
       urls,
-      fn url ->
-        hasil = Watchdog.ping(url)
-
-        # simpan hasil ke memory ETS!
-        :ets.insert(:watchdog_metrics, {url, hasil})
-
-        IO.inspect(hasil, label: "Hasil Ping")
-        # Lakukan ping dan insert ke :ets di sini (sama seperti sebelumnya)
-      end,
-      # Maksimal 2 proses jalan berbarengan
-      max_concurrency: 4
+      &ping/1,
+      # Maksimal 4 proses jalan berbarengan
+      max_concurrency: 4,
+      timeout: 10_000,
+      on_timeout: :kill_task
     )
     |> Stream.run()
 
@@ -76,7 +71,13 @@ defmodule Watchdog.Scheduler do
     {:noreply, urls}
   end
 
-  def default_url() do
-    ["https://google.com", "https://youtube.com"]
+  defp ping(url) do
+    # Lakukan ping dan insert ke :ets di sini (sama seperti sebelumnya)
+    hasil = Watchdog.ping(url)
+
+    # simpan hasil ke memory ETS!
+    :ets.insert(:watchdog_metrics, {url, hasil})
+
+    IO.inspect(hasil, label: "Hasil Ping")
   end
 end

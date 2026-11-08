@@ -9,11 +9,15 @@ defmodule Watchdog.History do
     :ets.lookup(:watchdog_metrics, url)
   end
 
-  def format_response([{_url, result}]) do
+  defp format_response([{_url, result}]) do
     result
   end
 
-  def format_response([]) do
+  defp format_response([]) do
     {:error, :not_found}
+  end
+
+  def all do
+    :ets.tab2list(:watchdog_metrics)
   end
 end
