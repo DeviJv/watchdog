@@ -11,6 +11,7 @@ defmodule Watchdog.Application do
       # Starts a worker by calling: Watchdog.Worker.start_link(arg)
       #
       {Task.Supervisor, name: Watchdog.TaskSupervisor},
+      {Watchdog.Repo, []},
       {Watchdog.Scheduler, urls: Application.fetch_env!(:watchdog, :urls)}
     ]
 

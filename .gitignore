@@ -22,3 +22,6 @@ erl_crash.dump
 # Ignore package tarball (built via "mix hex.build").
 watchdog-*.tar
 
+watchdog_repo
+watchdog_repo-shm
+watchdog_repo-wal

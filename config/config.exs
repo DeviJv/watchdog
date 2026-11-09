@@ -1,5 +1,14 @@
 import Config
 
+config :watchdog, Watchdog.Repo,
+  database: "watchdog_repo",
+  username: "user",
+  password: "pass",
+  hostname: "localhost"
+
+# Beri tahu Ecto letak repo kita
+config :watchdog, ecto_repos: [Watchdog.Repo]
+
 config :watchdog,
   urls: [
     "https://github.com",
