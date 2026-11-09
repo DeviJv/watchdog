@@ -22,17 +22,7 @@ defmodule Watchdog.Scheduler do
 
   def init(opts) do
     # Ambil urls dan ets_table dari opts, wajib pakai pattern Keyword List
-
     urls = Keyword.get(opts, :urls, [])
-    # ets_table = Keyword.get(opts, :ets_table, :watchdog_metrics)
-
-    # Bikin tabel memori bernama :watchdog_metrics
-    # :set artinya tipe datanya unik (key-value), :public agar bisa ditulis oleh Task worker dan dia create or update
-    # jadi tidak menumpuk atau duplicate dengan url menjadi primary key nya
-    # kalo primary sudah ada dia akan update hasil nya saja ketika insert di bawah
-    # :named_table agar kita bisa memanggilnya cukup dengan nama :watchdog_metrics
-
-    # :ets.new(ets_table, [:set, :public, :named_table])
 
     Process.send_after(self(), :ping_sekarang, @sleep_interval)
 
