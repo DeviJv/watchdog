@@ -1,41 +1,37 @@
 defmodule WatchdogTest do
   use ExUnit.Case, async: true
-  doctest Watchdog
 
-  test "greets the world" do
-    assert Watchdog.hello() == :world
+  # Setup dijalankan sebelum setiap blok 'test' dimulai
+  setup do
+    # Menyalakan web server bohongan di port acak
+    bypass = Bypass.open()
+    {:ok, bypass: bypass}
   end
 
-  describe "ping/1" do
-    # scenario berhasil
-    test "returns :ok and status: 200 for a valid URL" do
-      # siapkan URL pasti yang hidup
-      url = "https://httpbin.org/status/200"
-      # jalankan fungsi yg akan di exekusi
-      {status, resp} = Watchdog.ping(url)
-      # pasti hasil yang kita harapkan
-      assert status == :ok
-      assert resp.status == 200
-      assert resp.url == url
+  test "ping/1 mengembalikan status 200 saat server merespons sukses", %{bypass: bypass} do
+    # 1. Konfigurasi server bohongan agar selalu membalas dengan HTTP 200
+    Bypass.expect(bypass, fn conn ->
+      Plug.Conn.resp(conn, 200, "OK")
+    end)
 
-      # Kita juga bisa memastikan time_in_ms adalah sebuah angka (float)
-      assert is_float(resp.time_in_ms)
-    end
+    # 2. Ambil URL lokal dari server bohongan tersebut (contoh: http://localhost:12345)
+    url_bohongan = "http://localhost:#{bypass.port}"
 
-    # scenario gagal
-    test "return :error kalo url nya ga valid atau asal" do
-      # siapkan url ngasal
-      url = "https://ini-pasti-ga-ada-web-nya.xxw"
+    # 3. Tembak menggunakan fungsi ping() Anda
+    # Kita menggunakan Pattern Matching ketat untuk memvalidasi kembaliannya
+    assert {:ok, %{status: 200, time_in_ms: time}} = Watchdog.ping(url_bohongan)
 
-      # jalankan fungsi yang akan di exekusi
-      {status, resp} = Watchdog.ping(url)
+    # Validasi tambahan: waktu respons tidak boleh minus
+    assert time >= 0
+  end
 
-      # Pastikan (Assert) aplikasi tidak crash, melainkan mengembalikan :error
-      assert status == :error
+  test "ping/1 menangani error saat server down", %{bypass: bypass} do
+    # 1. Konfigurasi server bohongan untuk memutus koneksi secara paksa (Simulasi server mati)
+    Bypass.down(bypass)
 
-      # pastikan ada pesan error di dalam map
-      assert Map.has_key?(resp, :reason)
-      assert resp.url == url
-    end
+    url_bohongan = "http://localhost:#{bypass.port}"
+
+    # 2. Fungsi ping Anda harus mengembalikan tuple :error jika target mati
+    assert {:error, _reason} = Watchdog.ping(url_bohongan)
   end
 end

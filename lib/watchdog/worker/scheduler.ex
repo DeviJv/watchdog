@@ -1,9 +1,9 @@
-defmodule Watchdog.Scheduler do
+defmodule Watchdog.Worker.Scheduler do
   use GenServer
   require Logger
 
-  alias Watchdog.MetricContext
-  alias Watchdog.Metric
+  alias Watchdog.Monitoring
+  alias Watchdog.Monitoring.Metric
 
   @ping_interval 5_000
   @sleep_interval 1_000
@@ -66,6 +66,13 @@ defmodule Watchdog.Scheduler do
     # Lakukan ping dan insert ke :ets di sini (sama seperti sebelumnya)
     case Watchdog.ping(url) do
       {:ok, %{status: status, time_in_ms: raw_time}} ->
+        # Jika server hidup tapi merespons dengan kode error (misal 500 Server Error)
+        if status >= 400 do
+          broadcast_alert(url, "HTTP Status Error: #{status}")
+        else
+          broadcast_up(url)
+        end
+
         %{
           url: url,
           status_code: status,
@@ -75,6 +82,10 @@ defmodule Watchdog.Scheduler do
         |> simpan_ke_db()
 
       {:error, reason} ->
+        # [JAWABAN TUGAS 3 ADA DI SINI]
+        # Berteriak ke Registry bahwa target mati, sebelum data disimpan ke DB.
+        broadcast_alert(url, inspect(reason))
+
         %{
           url: url,
           status_code: nil,
@@ -90,7 +101,7 @@ defmodule Watchdog.Scheduler do
   # Alih-alih pakai case, kita lempar langsung ke fungsi multiclause
   defp simpan_ke_db(attrs) do
     attrs
-    |> MetricContext.create()
+    |> Monitoring.create()
     |> handle_db_result()
   end
 
@@ -102,5 +113,17 @@ defmodule Watchdog.Scheduler do
   # Function head 2: Menangkap jika gagal (error changeset)
   defp handle_db_result({:error, %Ecto.Changeset{} = changeset}) do
     Logger.error("Gagal simpan ke DB: #{inspect(changeset.errors)}")
+  end
+
+  defp broadcast_alert(url, reason) do
+    Registry.dispatch(Watchdog.PubSub, "alerts", fn entries ->
+      for {pid, _} <- entries, do: send(pid, {:target_down, url, reason})
+    end)
+  end
+
+  defp broadcast_up(url) do
+    Registry.dispatch(Watchdog.PubSub, "alerts", fn entries ->
+      for {pid, _} <- entries, do: send(pid, {:target_up, url})
+    end)
   end
 end

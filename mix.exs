@@ -24,7 +24,11 @@ defmodule Watchdog.MixProject do
     [
       {:req, "~> 0.7.5"},
       {:ecto_sql, "~> 3.14"},
-      {:ecto_sqlite3, "~> 0.26.0"}
+      {:ecto_sqlite3, "~> 0.26.0"},
+      {:plug, "~> 1.20"},
+      {:bandit, "~> 1.14"},
+      {:jason, "~> 1.4"},
+      {:bypass, "~> 2.1", only: :test}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]

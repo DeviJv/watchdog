@@ -10,9 +10,13 @@ defmodule Watchdog.Application do
     children = [
       # Starts a worker by calling: Watchdog.Worker.start_link(arg)
       #
+      {Registry, keys: :duplicate, name: Watchdog.PubSub},
       {Task.Supervisor, name: Watchdog.TaskSupervisor},
       {Watchdog.Repo, []},
-      {Watchdog.Scheduler, urls: Application.fetch_env!(:watchdog, :urls)}
+      {Watchdog.Worker.Scheduler, urls: Application.fetch_env!(:watchdog, :urls)},
+      {Watchdog.Worker.AlertWorker, []},
+      {Watchdog.Worker.IncidentCounter, []},
+      {Bandit, plug: Watchdog.Web.Router, port: 4000}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

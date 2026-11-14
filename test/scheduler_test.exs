@@ -12,7 +12,7 @@ defmodule Watchdog.SchedulerTest do
     # 2. Lahirkan Scheduler baru yang terisolasi HANYA untuk tes ini
     # Ini tidak akan mengganggu Scheduler utama dari application.ex
     start_supervised!({
-      Watchdog.Scheduler,
+      Watchdog.Worker.Scheduler,
       urls: ["https://example.com"], ets_table: ets_table, name: process_name
     })
 

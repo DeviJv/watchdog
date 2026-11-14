@@ -1,5 +1,5 @@
-defmodule Watchdog.MetricContext do
-  alias Watchdog.Metric
+defmodule Watchdog.Monitoring do
+  alias Watchdog.Monitoring.Metric
   alias Watchdog.Repo
 
   def list_metrics() do

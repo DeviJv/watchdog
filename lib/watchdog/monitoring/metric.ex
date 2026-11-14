@@ -1,6 +1,14 @@
-defmodule Watchdog.Metric do
+defmodule Watchdog.Monitoring.Metric do
   use Ecto.Schema
   import Ecto.Changeset
+
+  # Tambahkan baris ini HANYA (Standar Emas)
+  # Tambahkan satu baris @derive ini persis sebelum pemanggilan schema "metrics" do.
+  # Ini memberi tahu Jason cara otomatis mengubah struct Metric menjadi JSON
+  # tanpa mengikutsertakan __meta__.
+  @derive {Jason.Encoder, only: [:id, :url, :status_code, :time_ms, :error_reason, :inserted_at]}
+  # fungsi @derive di atas sama seperti fungsi dibawah ini
+  #   |> Enum.map(&(&1 |> Map.from_struct() |> Map.drop([:__meta__])))
 
   # Memetakan struct Elixir ke tabel fisik "metrics"
   schema "metrics" do
