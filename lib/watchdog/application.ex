@@ -7,6 +7,8 @@ defmodule Watchdog.Application do
 
   @impl true
   def start(_type, _args) do
+    Watchdog.Telemetry.attach()
+
     children = [
       # Starts a worker by calling: Watchdog.Worker.start_link(arg)
       #
@@ -16,6 +18,7 @@ defmodule Watchdog.Application do
       {Watchdog.Worker.Scheduler, urls: Application.fetch_env!(:watchdog, :urls)},
       {Watchdog.Worker.AlertWorker, []},
       {Watchdog.Worker.IncidentCounter, []},
+      {Watchdog.Worker.MemoryMonitor, []},
       {Bandit, plug: Watchdog.Web.Router, port: 4000}
     ]
 

@@ -52,6 +52,14 @@ defmodule Watchdog do
     # convert ke milisecond
     time_in_ms = time_in_us / 1_000
     # return berlanjut ke kebutuhan selanjut nya
+    #
+    # Format: :telemetry.execute(nama_event, measurements, metadata)
+    :telemetry.execute(
+      [:watchdog, :pinger, :request],
+      %{duration_ms: time_in_ms},
+      %{url: url}
+    )
+
     {result, time_in_ms, url}
   end
 
