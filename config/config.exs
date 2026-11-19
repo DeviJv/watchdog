@@ -12,7 +12,7 @@ config :logger, :default_formatter, metadata: [:url, :duration_ms]
 
 config :watchdog,
   urls: [
-    # "https://tohtemunc12321.c11om",
+    "https://www1232124124124124124124pas-tiisss.eeqwew12323",
     "https://github.com",
     "https://cloudflare.com",
     "https://microsoft.com",

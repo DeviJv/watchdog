@@ -34,8 +34,12 @@ defmodule Watchdog.Worker.Scheduler do
   end
 
   def handle_cast({:tambah_url, new_url}, state) do
-    new_urls = [new_url | state.urls]
-    {:noreply, %{state | urls: new_urls}}
+    if(Enum.member?(state.urls, new_url)) do
+      {:noreply, state}
+    else
+      new_urls = [new_url | state.urls]
+      {:noreply, %{state | urls: new_urls}}
+    end
   end
 
   def handle_info(:ping_sekarang, state) do
