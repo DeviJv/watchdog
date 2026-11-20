@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Watchdog Live Monitor</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #111; color: #eee; }
+    .badge { padding: 4px 10px; border-radius: 4px; font-weight: bold; }
+    .connected { background: #16a34a; color: white; }
+    .disconnected { background: #dc2626; color: white; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #333; padding: 10px; text-align: left; }
+    tr.ok { background: #052e16; }
+    tr.down { background: #450a0a; }
+  </style>
+</head>
+<body>
+  <h2>Watchdog Live Monitor <span id="conn-status" class="badge disconnected">DISCONNECTED</span></h2>
+  <table>
+    <thead>
+      <tr>
+        <th>URL</th>
+        <th>Status</th>
+        <th>Latency (ms)</th>
+        <th>Error</th>
+        <th>Waktu</th>
+      </tr>
+    </thead>
+    <tbody id="metrics-body"></tbody>
+  </table>
+
+  <script>
+    const statusEl = document.getElementById("conn-status");
+    const tbody = document.getElementById("metrics-body");
+    const rows = {};
+
+    function renderRow(data) {
+      const isOk = data.status_code && data.status_code < 400;
+
+      if (!rows[data.url]) {
+        const tr = document.createElement("tr");
+        tbody.appendChild(tr);
+        rows[data.url] = tr;
+      }
+
+      const tr = rows[data.url];
+      tr.className = isOk ? "ok" : "down";
+      tr.innerHTML = `
+        <td>${data.url}</td>
+        <td>${data.status_code ?? "DOWN"}</td>
+        <td>${data.time_ms} ms</td>
+        <td>${data.error_reason ?? "-"}</td>
+        <td>${data.inserted_at}</td>
+      `;
+    }
+
+    function connect() {
+      const ws = new WebSocket("ws://localhost:4000/ws");
+
+      ws.onopen = async () => {
+        statusEl.textContent = "CONNECTED";
+        statusEl.className = "badge connected";
+
+        try {
+          const res = await fetch("/api/status");
+          const initialData = await res.json();
+          initialData.forEach(renderRow);
+        } catch (err) {
+          console.error("Gagal mengambil snapshot awal:", err);
+        }
+      };
+
+      ws.onerror = () => {
+        ws.close();
+      };
+
+      ws.onclose = () => {
+        statusEl.textContent = "DISCONNECTED (Reconnecting...)";
+        statusEl.className = "badge disconnected";
+        setTimeout(connect, 1500);
+      };
+
+      ws.onmessage = (event) => {
+        renderRow(JSON.parse(event.data));
+      };
+    }
+
+    connect();
+  </script>
+</body>
+</html>

@@ -2,12 +2,19 @@ defmodule Watchdog.Web.Router do
   alias Watchdog.Monitoring
   alias Watchdog.Controller.UrlController
   alias Watchdog.Worker.IncidentCounter
+  alias Watchdog.Web.SocketHandler
   use Plug.Router
 
   plug(Plug.Parsers,
     parsers: [:json],
     pass: ["text/*"],
     json_decoder: Jason
+  )
+
+  plug(Plug.Static,
+    at: "/",
+    from: :watchdog,
+    only: ~w(index.html)
   )
 
   plug(:match)
@@ -49,6 +56,12 @@ defmodule Watchdog.Web.Router do
     conn
     |> put_resp_content_type("application/json")
     |> send_resp(resp.status, resp.resp)
+  end
+
+  get "/ws" do
+    conn
+    |> WebSockAdapter.upgrade(SocketHandler, %{}, timeout: 60_000)
+    |> halt()
   end
 
   match(_) do

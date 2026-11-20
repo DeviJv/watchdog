@@ -106,17 +106,25 @@ defmodule Watchdog.Worker.Scheduler do
   defp simpan_ke_db(attrs) do
     attrs
     |> Monitoring.create()
-    |> handle_db_result()
+    |> handle_db_result
   end
 
   # Function head 1: Menangkap jika sukses
   defp handle_db_result({:ok, %Metric{} = metric}) do
     Logger.debug("Berhasil simpan data ping ke DB: #{metric.url}")
+    # panggil broadcast_metric()
+    broadcast_metric(metric)
   end
 
   # Function head 2: Menangkap jika gagal (error changeset)
   defp handle_db_result({:error, %Ecto.Changeset{} = changeset}) do
     Logger.error("Gagal simpan ke DB: #{inspect(changeset.errors)}")
+  end
+
+  defp broadcast_metric(metric) do
+    Registry.dispatch(Watchdog.PubSub, "metrics_live", fn entries ->
+      for {pid, _} <- entries, do: send(pid, {:new_metric, metric})
+    end)
   end
 
   defp broadcast_alert(url, reason) do

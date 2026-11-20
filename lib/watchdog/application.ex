@@ -11,7 +11,7 @@ defmodule Watchdog.Application do
 
     children = [
       # Starts a worker by calling: Watchdog.Worker.start_link(arg)
-      #
+
       {Registry, keys: :duplicate, name: Watchdog.PubSub},
       {Task.Supervisor, name: Watchdog.TaskSupervisor},
       {Watchdog.Repo, []},
