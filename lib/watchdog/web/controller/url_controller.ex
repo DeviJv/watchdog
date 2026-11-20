@@ -1,4 +1,4 @@
-defmodule Watchdog.Controller.UrlController do
+defmodule Watchdog.Web.Controller.UrlController do
   alias Watchdog.Rules.UrlValidator
 
   def add_url(%{"url" => url}) do

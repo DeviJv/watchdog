@@ -1,6 +1,6 @@
 defmodule Watchdog.Web.Router do
   alias Watchdog.Monitoring
-  alias Watchdog.Controller.UrlController
+  alias Watchdog.Web.Controller.UrlController
   alias Watchdog.Worker.IncidentCounter
   alias Watchdog.Web.SocketHandler
   use Plug.Router
