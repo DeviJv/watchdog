@@ -25,6 +25,8 @@ config :watchdog,
     "https://yahoo.com"
   ]
 
+# port: 4000
+
 # tambah baru kalo butuh
 
 # Optional: import environment-specific files like dev.exs, test.exs, or prod.exs

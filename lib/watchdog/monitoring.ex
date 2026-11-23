@@ -33,4 +33,18 @@ defmodule Watchdog.Monitoring do
     |> Metric.changeset(attrs)
     |> Repo.insert()
   end
+
+  def add_target(url) when is_binary(url) do
+    case Node.list() do
+      [worker_node | _] ->
+        case :rpc.call(worker_node, Watchdog.Worker.Scheduler, :add_target, [url]) do
+          :ok -> {:ok, :worker}
+          {:badrpc, reason} -> {:error, reason}
+        end
+
+      [] ->
+        Watchdog.Worker.Scheduler.add_target(url)
+        {:ok, :local}
+    end
+  end
 end
